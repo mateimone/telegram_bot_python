@@ -10,5 +10,3 @@ if __name__ == "__main__":
 
     bot.join()
     server.join()
-
-    print('ready')

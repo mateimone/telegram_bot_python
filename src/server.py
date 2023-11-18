@@ -27,11 +27,23 @@ class Server(Thread):
     @staticmethod
     @app.route('/branch/create', methods=['POST'])
     async def branch_create():
-        bot = TelegramBot.get_instance()
+        bot: TelegramBot = TelegramBot().get_instance()
         file = open('github_update.txt', 'w')
         file.write(prettify_json(json.dumps(request.json)))
         file.close()
 
-        await bot.send_update('A new branch has been created!')
+        asyncio.run_coroutine_threadsafe(bot.send_update('A new branch has been created!'), bot.get_event_loop())
+
+        return 'Success', 200
+
+    @staticmethod
+    @app.route('/issue', methods=['POST'])
+    async def issue():
+        bot: TelegramBot = TelegramBot().get_instance()
+        file = open('issue_updates.txt', 'w')
+        file.write(prettify_json(json.dumps(request.json)))
+        file.close()
+
+        asyncio.run_coroutine_threadsafe(bot.send_update('Something happened with the issues'), bot.get_event_loop())
 
         return 'Success', 200

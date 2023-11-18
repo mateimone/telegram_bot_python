@@ -10,9 +10,12 @@ class TelegramBot(Thread):
     TOKEN: Final = "6855973254:AAFTLCJXcyjVwQ4R-lZSAcB1Fl5xpf_QhtM"
     BOT_USERNAME: Final = "@matei_github_bot"
     _instance = None
+    _event_loop = None
     _lock = Lock()
 
     def __init__(self, gh_token=None, repo=None, username=None, chat_id=None):
+        # if hasattr(self, '_initialized'):
+        #     return
         super().__init__()
         self.repo: str | None = repo
         self.username: str | None = username
@@ -21,18 +24,21 @@ class TelegramBot(Thread):
         self.gh_token = gh_token
         self.github_account: Github | None = Github(gh_token) if gh_token is not None else None
         self.lock = Lock()
-        TelegramBot._instance = self
+        # self._initialized = True
 
     @staticmethod
     def get_instance():
         return TelegramBot._instance
 
+    @staticmethod
+    def get_event_loop():
+        return TelegramBot._event_loop
+
     # # TODO: make it a singleton
     # def __new__(cls, *args, **kwargs):
-    #     # with cls._lock:
-    #     if cls._instance is None:
-    #         cls._instance = super(TelegramBot, cls).__new__(cls)
-    #     # time.sleep(0.5)
+    #     with cls._lock:
+    #         if cls._instance is None:
+    #             cls._instance = super(TelegramBot, cls).__new__(cls)
     #
     #     return cls._instance
 
@@ -40,6 +46,7 @@ class TelegramBot(Thread):
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
+            TelegramBot._event_loop = loop
 
             self.main_telegram()
         except Exception as e:
@@ -103,22 +110,25 @@ class TelegramBot(Thread):
 
     def main_telegram(self):
         print("Starting bot")
-        bot = TelegramBot()
+
+        # bot = TelegramBot()
 
         # Commands
-        bot.app.add_handler(CommandHandler('start', bot.start_command))
-        bot.app.add_handler(CommandHandler('linkghusername', bot.link_github_username_command))
-        bot.app.add_handler(CommandHandler('linkghrepo', bot.link_github_repo_command))
-        bot.app.add_handler(CommandHandler('linkghtoken', bot.link_github_token_command))
-        bot.app.add_handler(CommandHandler('createissue', bot.create_issue))
-        bot.app.add_handler(CommandHandler('help', bot.help))
-        bot.app.add_handler(CommandHandler('save', bot.save_to_file))
+        self.app.add_handler(CommandHandler('start', self.start_command))
+        self.app.add_handler(CommandHandler('linkghusername', self.link_github_username_command))
+        self.app.add_handler(CommandHandler('linkghrepo', self.link_github_repo_command))
+        self.app.add_handler(CommandHandler('linkghtoken', self.link_github_token_command))
+        self.app.add_handler(CommandHandler('createissue', self.create_issue))
+        self.app.add_handler(CommandHandler('help', self.help))
+        self.app.add_handler(CommandHandler('save', self.save_to_file))
 
         # Messages
-        bot.app.add_handler(MessageHandler(filters.TEXT, bot.handle_message))
+        self.app.add_handler(MessageHandler(filters.TEXT, self.handle_message))
 
         # Error
-        bot.app.add_error_handler(bot.error)
+        self.app.add_error_handler(self.error)
+
+        TelegramBot._instance = self
 
         print("Polling...")
-        bot.app.run_polling(poll_interval=0.2)
+        self.app.run_polling(poll_interval=0.2)
