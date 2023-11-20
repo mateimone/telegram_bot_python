@@ -1,3 +1,6 @@
+import sys
+
+from ngrok_process import Ngrok
 from telegram_bot import TelegramBot
 from server import Server
 
@@ -8,5 +11,10 @@ if __name__ == "__main__":
     server = Server()
     server.start()
 
-    bot.join()
     server.join()
+
+    ngrok = Ngrok()
+    # ngrok.start()
+
+    # ngrok.join()
+    bot.join()
