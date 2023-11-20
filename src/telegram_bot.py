@@ -80,7 +80,6 @@ class TelegramBot(Thread):
         await update.message.reply_text('Saved GitHub data to file')
 
     async def create_issue(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        print("HERE")
         with self.lock:
             title = context.args[0]
             body = context.args[1]
@@ -111,21 +110,25 @@ class TelegramBot(Thread):
             await self.app.bot.send_message(chat_id=self.chat_id, text=message)
 
     async def set_webhooks(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        # try:
-        # future = asyncio.run_coroutine_threadsafe(Ngrok.get_ngrok_url(), Ngrok.get_event_loop())
         port = context.args[0]
         result = await Ngrok.get_ngrok_url(port)
-        # result = future.result(3)
         config = {
             "url": result,
             "content_type": "json"
         }
         repository = Github(self.gh_token).get_user(self.username).get_repo(self.repo)
         self.push_hooks(repository, config, result + "/branch/create", ["create"])
-        self.push_hooks(repository, config, result + "/issue", ["issues"])
-
-        # except concurrent.futures.TimeoutError:
-        #     print("Coroutine did not complete within timeout period.")
+        self.push_hooks(repository, config, result + "/branch/delete", ["delete"])
+        self.push_hooks(repository, config, result + "/issues", ["issues"])
+        self.push_hooks(repository, config, result + "/issue/comment", ["issue_comment"])
+        self.push_hooks(repository, config, result + "/commit/comment", ["commit_comment"])
+        self.push_hooks(repository, config, result + "/milestone", ["milestone"])
+        self.push_hooks(repository, config, result + "/label", ["label"])
+        self.push_hooks(repository, config, result + "/pull_request", ["pull_request"])
+        self.push_hooks(repository, config, result + "/push", ["push"])
+        self.push_hooks(repository, config, result + "/pull_request/review", ["pull_request_review"])
+        self.push_hooks(repository, config, result + "/pull_request/review/comment", ["pull_request_review_comment"])
+        self.push_hooks(repository, config, result + "/team_add", ["team_add"])
 
     def push_hooks(self, repository: Repository, config: dict[str, str], path: str, events: List[str]):
         config["url"] = path
@@ -137,21 +140,8 @@ class TelegramBot(Thread):
             active=True
         )
 
-    # @staticmethod
-    # async def close_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    #     # asyncio.run_coroutine_threadsafe(Ngrok.stop_ngrok(), Ngrok.get_event_loop())
-    #     # asyncio.run_coroutine_threadsafe(Ngrok.get_event_loop().run_until_complete(Ngrok.terminate_ngrok()), Ngrok.get_event_loop())
-    #     await Ngrok.terminate_ngrok()
-    #     await update.message.reply_text('Closing bot...')
-    #     for task in asyncio.all_tasks():
-    #         task.cancel()
-    #     TelegramBot._event_loop.stop()
-    #     sys.exit(0)
-
     def main_telegram(self):
         print("Starting bot")
-
-        # bot = TelegramBot()
 
         # Commands
         self.app.add_handler(CommandHandler('start', self.start_command))
@@ -161,7 +151,6 @@ class TelegramBot(Thread):
         self.app.add_handler(CommandHandler('createissue', self.create_issue))
         self.app.add_handler(CommandHandler('help', self.help))
         self.app.add_handler(CommandHandler('save', self.save_to_file))
-        # self.app.add_handler(CommandHandler('close', self.close_bot))
         self.app.add_handler(CommandHandler('auto_set_webhooks', self.set_webhooks))
 
         # Messages
@@ -170,10 +159,7 @@ class TelegramBot(Thread):
         # Error
         self.app.add_error_handler(self.error)
 
-        # print(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_data.txt'))
-
         if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_data.txt')):
-            # print("HERE")
             with open('user_data.txt', 'r') as file:
                 tokens = file.read().split('\n')
                 self.chat_id = tokens[0]
@@ -181,7 +167,6 @@ class TelegramBot(Thread):
                 self.repo = tokens[2]
                 self.gh_token = tokens[3]
 
-        # print(self.chat_id, self.username, self.repo, self.gh_token)
         TelegramBot._instance = self
 
         print("Polling...")
