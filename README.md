@@ -7,7 +7,7 @@ address visible on the internet. After you've installed Ngrok, you'll only need 
 to be able to receive notifications on your project, or to even add resources to it.
 
 Firstly, clone the project and install the dependencies. Then, open up a command line and run the command
-```python /path/to/main.py```
+```python /path/to/src/main.py```
 This command accepts one additional parameter, debug. Write 'True' if you want any notification to be saved to a file,
 as you can see more information there, although in JSON format as sent by GitHub. Writing anything else or leaving it
 empty will assign False to that parameter.
