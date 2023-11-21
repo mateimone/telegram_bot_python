@@ -2,12 +2,10 @@
 
 Welcome to 'telegram_bot_python'!\
 This is my first personal project, and the first time I've worked with the
-Telegram and GitHub API. The only external resource you'll need is Ngrok, an application that makes your local
-address visible on the internet. After you've installed Ngrok, you'll only need to open it and follow the instructions
-to be able to receive notifications on your project, or to even add resources to it.
+Telegram and GitHub Python APIs. The only external resource you'll need is Ngrok, an application that makes your local
+address visible on the internet and the project dependencies.
 
-
-Firstly, you will want to set Ngrok (download from [here](https://ngrok.com/download); for Windows, just download as ZIP) as a $PATH$ variable. 
+Firstly, you will want to set Ngrok (download from [here](https://ngrok.com/download); for Windows, just download as ZIP) as a \$PATH\$ variable. 
 If you don't know how to do this, follow this [guide](https://www.educative.io/answers/how-to-add-an-application-path-to-system-environment-variables).
 
 Now, clone the project and install the dependencies. Then, open up a command line and run the command
@@ -68,8 +66,9 @@ Pull request review comment (pull_request_review_comment)
 Team add (team_add)
 ```
 
-List of resources you can add:
+Other things you can do
 ```
-Issue creation (with title and body)
-Branch creation (with title and optional source branch) - if source branch is not given, it will be considered main; if main is renamed, the branch won't be found
+Create or delete branches
+List all existing branches
+Create issues with a title and body
 ```
