@@ -34,15 +34,15 @@ The GitHub repo is the name of the repository you want to add the webhooks to.\
 The GitHub token is your personal token that will be used to access the GitHub API (found [here](https://github.com/settings/tokens)).\
 The GitHub username is, well, the username you have on GitHub.
 
-The repo, token, and username can still be used to create issues, branch, and other resources.
 Finally, look at the Ngrok terminal and take the port of the **web interface** address.
-Run one last command, with param = web interface port
+Run one last command, with ```param = web interface port```.\
+After a few seconds, you should receive a message on Telegram stating that the webhooks are set. You will now get
+notifications for certain updates on GitHub. A list of notifications can be found at the end of the file.
 ```
 /auto_set_webhooks param - automatically sets webhooks for updates on ngrok's web interface port
 ```
 **Note**: webhooks can only be set by a repository owner or by someone who has admin access.\
-After a few seconds, you should receive a message on Telegram stating that the webhooks are set. You will now receive
-notifications for certain updates on GitHub. A list of notifications can be found below.
+If you aren't allowed to add webhooks, the repo, token, and username can still be used to create issues, branch, and other resources.
 
 If you want to close the program, simply exit both Ngrok and python terminals. The bot will retain the information that
 you provided through the 3 'link commands'. The webhook command will have to be run again, since the address Ngrok
