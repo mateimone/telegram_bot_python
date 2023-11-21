@@ -2,7 +2,6 @@ import asyncio
 import os
 from typing import Final, List
 
-import github
 from telegram import Update
 from telegram.ext import ContextTypes
 from github import Github, Repository
@@ -279,5 +278,5 @@ class TelegramBot(Thread):
 
         TelegramBot._instance = self
 
-        # print("Polling...")
+        print("Polling...")
         self.app.run_polling(poll_interval=0.2)
