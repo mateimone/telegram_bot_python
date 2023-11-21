@@ -32,7 +32,7 @@ class Server(Thread):
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
 
-        app.run(debug=True, port=4040, use_reloader=False)
+        app.run(debug=Server._debug, port=4040, use_reloader=False)
 
     @staticmethod
     def get_event_loop():

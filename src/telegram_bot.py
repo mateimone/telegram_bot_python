@@ -1,6 +1,8 @@
 import asyncio
 import os
 from typing import Final, List
+
+import github
 from telegram import Update
 from telegram.ext import ContextTypes
 from github import Github, Repository
@@ -91,6 +93,27 @@ class TelegramBot(Thread):
 
             await update.message.reply_text(f'Issue created at {issue.html_url}')
 
+    async def create_branch(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        with self.lock:
+            name = context.args[0]
+            source_branch = 'main'
+            if len(context.args) == 2:
+                source_branch = context.args[1]
+            gh = Github(self.gh_token).get_user(self.username).get_repo(self.repo)
+            branch_exists = any(branch.name == source_branch for branch in gh.get_branches())
+            new_branch_exists = any(name == branch.name for branch in gh.get_branches())
+
+            if new_branch_exists:
+                await update.message.reply_text(f"Branch {name} already exists!")
+                return
+            if branch_exists:
+                sha = gh.get_branch(source_branch).commit.sha
+                gh.create_git_ref(ref=f"refs/heads/{name}", sha=sha)
+                await update.message.reply_text(f"Creating branch from {source_branch}")
+
+            else:
+                await update.message.reply_text("Source branch not found!")
+
     def add_data_to_file(self, data: str, pos: int):
         lines = []
         with open('src/user_data.txt', 'r') as file:
@@ -108,6 +131,30 @@ class TelegramBot(Thread):
 
         if message_type != 'group':
             await update.message.reply_text('Please use one of the commands. Type "/" to see all existing commands.')
+        elif text.startswith('@matei_github_bot'):
+            text.strip('@matei_github_bot')
+            match text:
+                case '/start':
+                    callback = self.start_command
+                case '/linkghusername':
+                    callback = self.link_github_username_command
+                case '/linkghrepo':
+                    callback = self.link_github_repo_command
+                case '/linkghtoken':
+                    callback = self.link_github_token_command
+                case '/createissue':
+                    callback = self.create_issue
+                case '/createbranch':
+                    callback = self.create_branch
+                case '/help':
+                    callback = self.help
+                case '/auto_set_webhooks':
+                    callback = self.set_webhooks
+                case '/linktogithub':
+                    callback = self.link_to_github
+                case _:
+                    callback = self.handle_message
+            await callback(update, context)
 
     async def error(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"Update {update} caused error {context.error}")
@@ -172,6 +219,11 @@ class TelegramBot(Thread):
             active=True
         )
 
+    async def link_to_github(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await update.message.reply_text(
+            f'This is a link to the README.md file of this project.\n'
+            f'https://github.com/mateimone/telegram_bot_python/blob/main/README.md')
+
     def main_telegram(self):
         print("Starting bot")
 
@@ -181,8 +233,10 @@ class TelegramBot(Thread):
         self.app.add_handler(CommandHandler('linkghrepo', self.link_github_repo_command))
         self.app.add_handler(CommandHandler('linkghtoken', self.link_github_token_command))
         self.app.add_handler(CommandHandler('createissue', self.create_issue))
+        self.app.add_handler(CommandHandler('createbranch', self.create_branch))
         self.app.add_handler(CommandHandler('help', self.help))
         self.app.add_handler(CommandHandler('auto_set_webhooks', self.set_webhooks))
+        self.app.add_handler(CommandHandler('linktogithub', self.link_to_github))
 
         # Messages
         self.app.add_handler(MessageHandler(filters.TEXT, self.handle_message))
