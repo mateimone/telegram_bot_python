@@ -184,8 +184,8 @@ class Server(Thread):
         data = json.loads(js)
         pusher = data['pusher']['name']
         ref = data['ref']
-
-        asyncio.run_coroutine_threadsafe(bot.send_update(f'Push event by {pusher} on {ref}'),
+        branch = str(ref).split('/')[2]
+        asyncio.run_coroutine_threadsafe(bot.send_update(f'Push event by {pusher} on {branch} ({ref})'),
                                          bot.get_event_loop())
 
         return 'Success', 200

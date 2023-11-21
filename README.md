@@ -1,11 +1,12 @@
-# telegram_bot
+# Telegram bot for GitHub
 
 Welcome to 'telegram_bot_python'!\
-This is my first personal project, and the first time I've worked with the
-Telegram and GitHub Python APIs. The only external resource you'll need is Ngrok, an application that makes your local
-address visible on the internet and the project dependencies.
+This is my first personal project, and the first time I've worked with the Telegram and GitHub Python APIs. 
+The only external resources you'll need are the project dependencies and Ngrok, an application that makes your local
+address visible on the internet.\
+This bot is not designed to be used in a group chat, as it requires a sort of authentication for a user's account to work.
 
-Firstly, you will want to set Ngrok (download from [here](https://ngrok.com/download); for Windows, just download as ZIP) as a \$PATH\$ variable. 
+Firstly, you will want to set Ngrok (download from [here](https://ngrok.com/download); for Windows, just download as ZIP and extract the files) as a $PATH$ variable. 
 If you don't know how to do this, follow this [guide](https://www.educative.io/answers/how-to-add-an-application-path-to-system-environment-variables).
 
 Now, clone the project and install the dependencies. Then, open up a command line and run the command
@@ -13,7 +14,7 @@ Now, clone the project and install the dependencies. Then, open up a command lin
 This command accepts one additional parameter, debug. Write 'True' if you want any notification to be saved to a file,
 as you can see more information there, although in JSON format as sent by GitHub. Writing anything else or leaving it
 empty will assign False to that parameter.
-**Note**: do this from a command line; otherwise, the bot might encounter problems when reading and writing to the user data file.
+**Note**: you have to include the python package 'src' in the path, otherwise the bot will not be able to correctly store your data
 
 After you've done this, open up another command line and run the command
 ```ngrok http http://127.0.0.1:4040```
@@ -22,17 +23,17 @@ It is essential that you first run the python script, and then the Ngrok command
 Finally, let's put them all together. To receive notifications, you need to add webhooks to GitHub that connect
 to the address Ngrok is exposing. For GitHub to let you add webhooks, you will need to provide a sort of identification.
 This can be done by running a few commands in Telegram.
-Open it up, search for '@matei_github_bot', and press on start. Now, you will need to run the following:
+Open it up, search for '@matei_github_bot', and click on start. Now, you will need to run the following:
 ```
 /linkghrepo param - links the bot to the repository name given as param
 /linkghtoken param - links the bot to the GitHub token given as param
 /linkghusername param - links the bot to the username given as param
 ```
-The GitHub repo is the name of the repository you want to add the webhooks to.\
+The GitHub repo is the name of the repository you want to have access to.\
 The GitHub token is your personal token that will be used to access the GitHub API (found [here](https://github.com/settings/tokens)).\
 The GitHub username is, well, the username you have on GitHub.
 
-Finally, look at the Ngrok terminal and take the port of the **web interface** address.
+Finally, look at the Ngrok terminal and copy the port of the **web interface** address.
 Run one last command, with ```param = web interface port```.\
 After a few seconds, you should receive a message on Telegram stating that the webhooks are set. You will now get
 notifications for certain updates on GitHub. A list of notifications can be found at the end of the file.

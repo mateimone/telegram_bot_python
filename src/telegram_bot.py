@@ -58,7 +58,7 @@ class TelegramBot(Thread):
         help += '/linkghrepo param - links the bot to the repository name given as param\n'
         help += '/linkghtoken param - links the bot to the GitHub token given as param\n'
         help += '/linkghusername param - links the bot to the username given as param\n'
-        help += '/auto_set_webhooks param - automatically sets webhooks for updates on ngrok\'s web interface port\n'
+        help += '/autosetwebhooks param - automatically sets webhooks for updates on ngrok\'s web interface port\n'
         help += '/createissue param1 param2 - creates an issue with param1 as title and param2 as body\n'
         help += ('/createbranch param1 _param2 - creates a branch with param1 as name with \'main\' as source branch, '
                  'unless _param2 is filled with a correct branch name\n')
@@ -148,7 +148,6 @@ class TelegramBot(Thread):
             if branch_exists:
                 sha = self.gh_api_repo.get_branch(source_branch).commit.sha
                 gitref: Repository.GitRef = self.gh_api_repo.create_git_ref(ref=f"refs/heads/{name}", sha=sha)
-                await update.message.reply_text(f"Created branch {name} from {source_branch}")
             else:
                 await update.message.reply_text("Source branch not found!")
 
@@ -176,7 +175,6 @@ class TelegramBot(Thread):
                 return
             ref = self.gh_api_repo.get_git_ref(f"heads/{branch_name}")
             ref.delete()
-            await update.message.reply_text(f'Branch {branch_name} deleted')
 
     async def set_webhooks(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         complete = await self.data_incomplete(update)
