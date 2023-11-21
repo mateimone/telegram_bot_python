@@ -11,10 +11,12 @@ app: Flask = Flask(__name__)
 
 class Server(Thread):
     _event_loop = None
+    _debug = False
 
-    def __init__(self):
+    def __init__(self, _debug=False):
         super().__init__()
         self.lock = Lock()
+        Server._debug = _debug
 
     def run(self):
         try:
@@ -40,10 +42,8 @@ class Server(Thread):
     @app.route('/branch/create', methods=['POST'])
     async def branch_create():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/branch_creation.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('branch_creation.txt', js)
 
         data = json.loads(js)
         sender = data['sender']['login']
@@ -58,10 +58,8 @@ class Server(Thread):
     @app.route('/branch/delete', methods=['POST'])
     async def branch_delete():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/branch_deletion.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('branch_deletion.txt', js)
 
         data = json.loads(js)
         sender = data['sender']['login']
@@ -76,10 +74,8 @@ class Server(Thread):
     @app.route('/issues', methods=['POST'])
     async def issue():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/issue_updates.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('issue_updates.txt', js)
 
         data = json.loads(js)
         sender = data['sender']['login']
@@ -96,10 +92,8 @@ class Server(Thread):
     @app.route('/issue/comment', methods=['POST'])
     async def issue_comment():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/issue_comments.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('issue_comments.txt', js)
 
         data = json.loads(js)
         commenter = data['comment']['user']['login']
@@ -116,10 +110,8 @@ class Server(Thread):
     @app.route('/commit/comment', methods=['POST'])
     async def commit_comment():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/commit_comments.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('commit_comments.txt', js)
 
         data = json.loads(js)
         commenter = data['comment']['user']['login']
@@ -134,10 +126,8 @@ class Server(Thread):
     @app.route('/milestone', methods=['POST'])
     async def milestone():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/milestones.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('milestones.txt', js)
 
         data = json.loads(js)
         action = data['action']
@@ -153,10 +143,8 @@ class Server(Thread):
     @app.route('/pull_request', methods=['POST'])
     async def pull_request():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/pull_requests.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('pull_requests.txt', js)
 
         data = json.loads(js)
         action = data['action']
@@ -172,10 +160,8 @@ class Server(Thread):
     @app.route('/label', methods=['POST'])
     async def label():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/label_events.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('label_events.txt', js)
 
         data = json.loads(js)
         action = data['action']
@@ -192,10 +178,8 @@ class Server(Thread):
     @app.route('/push', methods=['POST'])
     async def push():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/push_events.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('push_events.txt', js)
 
         data = json.loads(js)
         pusher = data['pusher']['name']
@@ -210,10 +194,8 @@ class Server(Thread):
     @app.route('/pull_request/review', methods=['POST'])
     async def pull_request_review():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/pull_request_review_events.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('pull_request_review_events.txt', js)
 
         data = json.loads(js)
         reviewer = data['review']['user']['login']
@@ -230,10 +212,8 @@ class Server(Thread):
     @app.route('/pull_request/review/comment', methods=['POST'])
     async def pull_request_review_comment():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/pull_request_review_comment_events.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('pull_request_review_comment_events.txt', js)
 
         data = json.loads(js)
         commenter = data['comment']['user']['login']
@@ -250,10 +230,8 @@ class Server(Thread):
     @app.route('/team_add', methods=['POST'])
     async def team_add():
         bot: TelegramBot = TelegramBot.get_instance()
-        file = open('update_data/team_add_events.txt', 'w')
         js = json.dumps(request.json)
-        file.write(prettify_json(js))
-        file.close()
+        Server.write_to_file('team_add_events.txt', js)
 
         data = json.loads(js)
         team_name = data['team']['name']
@@ -263,6 +241,13 @@ class Server(Thread):
                                          bot.get_event_loop())
 
         return 'Success', 200
+
+    @staticmethod
+    def write_to_file(path: str, js: str):
+        if Server._debug:
+            file = open(f'update_data/{path}', 'w')
+            file.write(prettify_json(js))
+            file.close()
 
     @staticmethod
     def stop_server():
