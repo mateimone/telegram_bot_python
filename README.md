@@ -46,3 +46,19 @@ previously generated webhooks, they will be deleted and replaced by new ones wit
 **Note**: if you want to make sure the webhooks will be deleted correctly, you might not want to modify the generated ones;
 if you add your own webhooks or modify the existing ones, they will probably not be deleted (unless you make a webhook
 with only one of the events that are automatically generated).
+
+List of notifications:
+```
+Branch or tag created (create)
+Branch or tag deleted (delete)
+Issue opened, edited, deleted, transferred, pinned, unpinned, closed, reopened, assigned, unassigned, labeled, unlabeled, milestoned, demilestoned, locked, or unlocked. (Issues)
+Issue comment (issue_comment)
+Commit comment (commit_comment)
+Milestone created, edited or deleted (milestone)
+Label created, edited or deleted (label)
+Push events (push)
+Pull requests (pull_request)
+Pull request review (pull_request_review)
+Pull request review comment (pull_request_review_comment)
+Team add (team_add)
+```

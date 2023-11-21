@@ -16,13 +16,13 @@ class TelegramBot(Thread):
     _event_loop = None
     _lock = Lock()
 
-    def __init__(self, gh_token=None, repo=None, username=None, chat_id=None):
+    def __init__(self):
         super().__init__()
-        self.repo: str | None = repo
-        self.username: str | None = username
+        self.repo: str | None = ''
+        self.username: str | None = ''
         self.app: Application = Application.builder().token(TelegramBot.TOKEN).build()
-        self.chat_id: str = chat_id
-        self.gh_token = gh_token
+        self.chat_id: str = ''
+        self.gh_token = ''
         self.lock = Lock()
 
     @staticmethod
@@ -125,11 +125,11 @@ class TelegramBot(Thread):
                 f'If somehow the Chat ID was not saved, you won\'t receive notifications. Run the /start command again.'
                 f'\nWebhooks were NOT set.')
             return
-        print('here')
-        port = context.args[0]
-        if port is None:
+
+        if len(context.args) == 0:
             await update.message.reply_text('The command cannot be used without a given port.')
             return
+        port = context.args[0]
 
         repository = Github(self.gh_token).get_user(self.username).get_repo(self.repo)
 
@@ -137,7 +137,7 @@ class TelegramBot(Thread):
                   "pull_request", "pull_request_review", "pull_request_review_comment", "team_add"]
         hooks = repository.get_hooks()
         for hook in hooks:
-            if hook.events[0] in events and len(events) == 1:
+            if hook.events[0] in events and len(hook.events) == 1:
                 hook.delete()  # delete previous hooks
 
         result = await Ngrok.get_ngrok_url(port)
@@ -190,7 +190,7 @@ class TelegramBot(Thread):
         # Error
         self.app.add_error_handler(self.error)
         print(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_data.txt'))
-        if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src/user_data.txt')):
+        if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_data.txt')):
             with open('src/user_data.txt', 'r') as file:
                 tokens = file.read().split('\n')
                 self.chat_id = tokens[0]

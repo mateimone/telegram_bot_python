@@ -5,7 +5,7 @@ from server import Server
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('myarg', default=False, help='Debug argument')
+    parser.add_argument('--myarg', type=str, default=False, help='Debug argument')
 
     args = parser.parse_args()
     debug = True if args.myarg == 'True' else False
