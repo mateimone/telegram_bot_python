@@ -21,7 +21,7 @@ class TelegramBot(Thread):
         self.repo: str | None = repo
         self.username: str | None = username
         self.app: Application = Application.builder().token(TelegramBot.TOKEN).build()
-        self.chat_id = chat_id
+        self.chat_id: str = chat_id
         self.gh_token = gh_token
         self.lock = Lock()
 
@@ -32,14 +32,6 @@ class TelegramBot(Thread):
     @staticmethod
     def get_event_loop():
         return TelegramBot._event_loop
-
-    # # TODO: make it a singleton
-    # def __new__(cls, *args, **kwargs):
-    #     with cls._lock:
-    #         if cls._instance is None:
-    #             cls._instance = super(TelegramBot, cls).__new__(cls)
-    #
-    #     return cls._instance
 
     def run(self):
         try:
@@ -54,30 +46,37 @@ class TelegramBot(Thread):
     # Commands
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         self.chat_id = update.effective_chat.id
+        self.add_data_to_file(str(self.chat_id), 0)
         await update.message.reply_text('Hello! Thanks for chatting with me!')
 
     async def help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text('This works.')
+        help = '/start - starts the conversation and registers the conversation ID\n'
+        help += '/help - display useful information about the commands\n'
+        help += '/linkghrepo param - links the bot to the repository name given as param\n'
+        help += '/linkghtoken param - links the bot to the GitHub token given as param\n'
+        help += '/linkghusername param - links the bot to the username given as param\n'
+        help += '/auto_set_webhooks param - automatically sets webhooks for updates on ngrok\'s web interface port\n'
+        help += '/createissue param1 param2 - creates an issue with param1 as title and param2 as body\n'
+
+        await update.message.reply_text(help)
 
     async def link_github_token_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         account_token = ' '.join(context.args)
         self.gh_token = account_token
+        self.add_data_to_file(account_token, 2)
         await update.message.reply_text('GitHub account token updated')
 
     async def link_github_repo_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         repo = ' '.join(context.args)
         self.repo = repo
+        self.add_data_to_file(repo, 1)
         await update.message.reply_text('Repository updated')
 
     async def link_github_username_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         username = ' '.join(context.args)
         self.username = username
+        self.add_data_to_file(username, 3)
         await update.message.reply_text('Name updated')
-
-    async def save_to_file(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        with open('user_data.txt', 'w') as file:
-            file.write(f"{self.chat_id}\n{self.username}\n{self.repo}\n{self.gh_token}")
-        await update.message.reply_text('Saved GitHub data to file')
 
     async def create_issue(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         with self.lock:
@@ -91,6 +90,15 @@ class TelegramBot(Thread):
             )
 
             await update.message.reply_text(f'Issue created at {issue.html_url}')
+
+    def add_data_to_file(self, data: str, pos: int):
+        lines = []
+        with open('user_data.txt', 'r') as file:
+            lines = file.readlines()
+            lines[pos] = data + '\n'
+
+        with open('user_data.txt', 'w') as file:
+            file.writelines(lines)
 
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         message_type: str = update.message.chat.type  # tells whether group chat or private conversation
@@ -110,13 +118,30 @@ class TelegramBot(Thread):
             await self.app.bot.send_message(chat_id=self.chat_id, text=message)
 
     async def set_webhooks(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if self.gh_token == '' or self.username == '' or self.repo == '' or self.chat_id == '':
+            await update.message.reply_text(
+                f'The data you have provided is incomplete.\nGitHub repo - {self.repo}\nGitHub token - {self.gh_token}'
+                f'\nGitHub username - {self.username}\nChat ID - {self.chat_id}\n'
+                f'If somehow the Chat ID was not saved, you won\'t receive notifications. Run the /start command again.'
+                f'\nWebhooks were NOT set.')
+            return
+        print('here')
         port = context.args[0]
+        if port is None:
+            await update.message.reply_text('The command cannot be used without a given port.')
+            return
+
+        repository = Github(self.gh_token).get_user(self.username).get_repo(self.repo)
+
+        hooks = repository.get_hooks()
+        for hook in hooks:
+            hook.delete()  # delete previous hooks
+
         result = await Ngrok.get_ngrok_url(port)
         config = {
             "url": result,
             "content_type": "json"
         }
-        repository = Github(self.gh_token).get_user(self.username).get_repo(self.repo)
         self.push_hooks(repository, config, result + "/branch/create", ["create"])
         self.push_hooks(repository, config, result + "/branch/delete", ["delete"])
         self.push_hooks(repository, config, result + "/issues", ["issues"])
@@ -124,11 +149,15 @@ class TelegramBot(Thread):
         self.push_hooks(repository, config, result + "/commit/comment", ["commit_comment"])
         self.push_hooks(repository, config, result + "/milestone", ["milestone"])
         self.push_hooks(repository, config, result + "/label", ["label"])
-        self.push_hooks(repository, config, result + "/pull_request", ["pull_request"])
         self.push_hooks(repository, config, result + "/push", ["push"])
+        self.push_hooks(repository, config, result + "/pull_request", ["pull_request"])
         self.push_hooks(repository, config, result + "/pull_request/review", ["pull_request_review"])
         self.push_hooks(repository, config, result + "/pull_request/review/comment", ["pull_request_review_comment"])
         self.push_hooks(repository, config, result + "/team_add", ["team_add"])
+        await update.message.reply_text('Webhooks set! To see a list of notifications you might receive, '
+                                        'visit https://github.com/mateimone/telegram_bot_python/blob/main/README.md. '
+                                        'Make sure that the port is correct, otherwise run the method again with the '
+                                        'correct port')
 
     def push_hooks(self, repository: Repository, config: dict[str, str], path: str, events: List[str]):
         config["url"] = path
@@ -150,7 +179,6 @@ class TelegramBot(Thread):
         self.app.add_handler(CommandHandler('linkghtoken', self.link_github_token_command))
         self.app.add_handler(CommandHandler('createissue', self.create_issue))
         self.app.add_handler(CommandHandler('help', self.help))
-        self.app.add_handler(CommandHandler('save', self.save_to_file))
         self.app.add_handler(CommandHandler('auto_set_webhooks', self.set_webhooks))
 
         # Messages
@@ -163,9 +191,14 @@ class TelegramBot(Thread):
             with open('user_data.txt', 'r') as file:
                 tokens = file.read().split('\n')
                 self.chat_id = tokens[0]
-                self.username = tokens[1]
-                self.repo = tokens[2]
-                self.gh_token = tokens[3]
+                self.repo = tokens[1]
+                self.gh_token = tokens[2]
+                self.username = tokens[3]
+                file.close()
+        else:
+            with open('user_data.txt', 'w') as file:
+                file.write('\n\n\n\n')
+                file.close()
 
         TelegramBot._instance = self
 

@@ -1,11 +1,11 @@
 import asyncio
-from threading import Thread, Lock
+import json
+import os
 
+from threading import Thread, Lock
 from flask import Flask, request
 from miscellaneous import prettify_json
 from telegram_bot import TelegramBot
-import json
-import os
 
 app: Flask = Flask(__name__)
 
@@ -87,7 +87,8 @@ class Server(Thread):
         title = data['issue']['title']
         number = data['issue']['number']
 
-        asyncio.run_coroutine_threadsafe(bot.send_update(f'User {sender} has {action} issue #{number} "{title}"'), bot.get_event_loop())
+        asyncio.run_coroutine_threadsafe(bot.send_update(f'User {sender} has {action} issue #{number} "{title}"'),
+                                         bot.get_event_loop())
 
         return 'Success', 200
 
