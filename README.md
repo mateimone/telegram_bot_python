@@ -6,21 +6,24 @@ Telegram and GitHub API. The only external resource you'll need is Ngrok, an app
 address visible on the internet. After you've installed Ngrok, you'll only need to open it and follow the instructions
 to be able to receive notifications on your project, or to even add resources to it.
 
-Firstly, clone the project and install the dependencies. Then, open up a command line and run the command
+
+Firstly, you will want to set Ngrok (download from [here](https://ngrok.com/download); for Windows, just download as ZIP) as a $PATH$ variable. 
+If you don't know how to do this, follow this [guide](https://www.educative.io/answers/how-to-add-an-application-path-to-system-environment-variables).
+
+Now, clone the project and install the dependencies. Then, open up a command line and run the command
 ```python /path/to/src/main.py```
 This command accepts one additional parameter, debug. Write 'True' if you want any notification to be saved to a file,
 as you can see more information there, although in JSON format as sent by GitHub. Writing anything else or leaving it
 empty will assign False to that parameter.
-**Note**: run this from a command line; otherwise, the bot might encounter problems when reading and writing to the user data file.
+**Note**: do this from a command line; otherwise, the bot might encounter problems when reading and writing to the user data file.
 
-Now, you will want to set Ngrok as a $PATH$ variable. If you don't know how to do this, follow this [guide](https://www.educative.io/answers/how-to-add-an-application-path-to-system-environment-variables).
-After you've done this, open up Ngrok and run the command
+After you've done this, open up another command line and run the command
 ```ngrok http http://127.0.0.1:4040```
 It is essential that you first run the python script, and then the Ngrok command. Otherwise, the program might not work.
 
 Finally, let's put them all together. To receive notifications, you need to add webhooks to GitHub that connect
 to the address Ngrok is exposing. For GitHub to let you add webhooks, you will need to provide a sort of identification.
-This can be done by running a few commands on Telegram.
+This can be done by running a few commands in Telegram.
 Open it up, search for '@matei_github_bot', and press on start. Now, you will need to run the following:
 ```
 /linkghrepo param - links the bot to the repository name given as param
