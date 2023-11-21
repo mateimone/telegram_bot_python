@@ -13,7 +13,7 @@ class Server(Thread):
     _event_loop = None
     _debug = False
 
-    def __init__(self, _debug=False):
+    def __init__(self, _debug):
         super().__init__()
         self.lock = Lock()
         Server._debug = _debug
@@ -28,7 +28,7 @@ class Server(Thread):
             print(f"Exception in TelegramBot: {e}")
 
     def main_server(self):
-        dir_name = "update_data"
+        dir_name = "src/update_data"
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
 
@@ -245,7 +245,7 @@ class Server(Thread):
     @staticmethod
     def write_to_file(path: str, js: str):
         if Server._debug:
-            file = open(f'update_data/{path}', 'w')
+            file = open(f'src/update_data/{path}', 'w')
             file.write(prettify_json(js))
             file.close()
 

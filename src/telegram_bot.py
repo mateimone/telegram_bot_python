@@ -93,11 +93,11 @@ class TelegramBot(Thread):
 
     def add_data_to_file(self, data: str, pos: int):
         lines = []
-        with open('user_data.txt', 'r') as file:
+        with open('src/user_data.txt', 'r') as file:
             lines = file.readlines()
             lines[pos] = data + '\n'
 
-        with open('user_data.txt', 'w') as file:
+        with open('src/user_data.txt', 'w') as file:
             file.writelines(lines)
 
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -188,7 +188,7 @@ class TelegramBot(Thread):
         self.app.add_error_handler(self.error)
 
         if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_data.txt')):
-            with open('user_data.txt', 'r') as file:
+            with open('src/user_data.txt', 'r') as file:
                 tokens = file.read().split('\n')
                 self.chat_id = tokens[0]
                 self.repo = tokens[1]
@@ -196,7 +196,7 @@ class TelegramBot(Thread):
                 self.username = tokens[3]
                 file.close()
         else:
-            with open('user_data.txt', 'w') as file:
+            with open('src/user_data.txt', 'w') as file:
                 file.write('\n\n\n\n')
                 file.close()
 

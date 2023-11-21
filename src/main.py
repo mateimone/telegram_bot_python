@@ -8,7 +8,7 @@ if __name__ == "__main__":
     parser.add_argument('myarg', help='A positional argument')
 
     args = parser.parse_args()
-    debug = args.myarg
+    debug = True if args.myarg == 'True' else False
 
     bot = TelegramBot()
     bot.start()
