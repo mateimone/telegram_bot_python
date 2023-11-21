@@ -133,9 +133,12 @@ class TelegramBot(Thread):
 
         repository = Github(self.gh_token).get_user(self.username).get_repo(self.repo)
 
+        events = ["create", "delete", "issues", "issue_comment", "commit_comment", "milestone", "label", "push",
+                  "pull_request", "pull_request_review", "pull_request_review_comment", "team_add"]
         hooks = repository.get_hooks()
         for hook in hooks:
-            hook.delete()  # delete previous hooks
+            if hook.events[0] in events and len(events) == 1:
+                hook.delete()  # delete previous hooks
 
         result = await Ngrok.get_ngrok_url(port)
         config = {
@@ -186,8 +189,8 @@ class TelegramBot(Thread):
 
         # Error
         self.app.add_error_handler(self.error)
-
-        if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_data.txt')):
+        print(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_data.txt'))
+        if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src/user_data.txt')):
             with open('src/user_data.txt', 'r') as file:
                 tokens = file.read().split('\n')
                 self.chat_id = tokens[0]

@@ -4,8 +4,8 @@ from telegram_bot import TelegramBot
 from server import Server
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Example script')
-    parser.add_argument('myarg', help='A positional argument')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('myarg', default=False, help='Debug argument')
 
     args = parser.parse_args()
     debug = True if args.myarg == 'True' else False
