@@ -11,7 +11,7 @@ from ngrok_process import Ngrok
 
 
 class TelegramBot(Thread):
-    TOKEN: Final = "6855973254:AAFTLCJXcyjVwQ4R-lZSAcB1Fl5xpf_QhtM"
+    TOKEN: Final = os.environ['BOT_TOKEN']
     BOT_USERNAME: Final = "@matei_github_bot"
     _instance = None
     _event_loop = None
