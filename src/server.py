@@ -1,10 +1,12 @@
 import asyncio
 import json
 import os
+import sqlite3
 
 from threading import Thread, Lock
 from flask import Flask, request
 from miscellaneous import prettify_json
+from Database import Database
 from telegram_bot import TelegramBot
 
 app: Flask = Flask(__name__)
@@ -48,6 +50,13 @@ class Server(Thread):
         data = json.loads(js)
         sender = data['sender']['login']
         branch_name = data['ref']
+
+        db: Database = TelegramBot.get_db()
+        # entries: list = db.get_by_repo(repo)
+
+
+        # TODO: take chat_id from each of those entries and pass it as parameter to send update;
+        #  eliminate chat_id, username, etc from TelegramBot
 
         asyncio.run_coroutine_threadsafe(bot.send_update(f'User {sender} has created a new branch {branch_name}!'),
                                          bot.get_event_loop())

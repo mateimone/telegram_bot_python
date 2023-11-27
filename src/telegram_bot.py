@@ -1,5 +1,6 @@
 import asyncio
 import os
+import sqlite3
 from typing import Final, List
 
 from telegram import Update
@@ -8,14 +9,16 @@ from github import Github, Repository
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from threading import Thread, Lock
 from ngrok_process import Ngrok
+from Database import Database
 
 
 class TelegramBot(Thread):
-    TOKEN: Final = os.environ['BOT_TOKEN']
+    TOKEN: Final = ""
     BOT_USERNAME: Final = "@matei_github_bot"
     _instance = None
     _event_loop = None
     _lock = Lock()
+    _db = None
 
     def __init__(self):
         super().__init__()
@@ -26,6 +29,12 @@ class TelegramBot(Thread):
         self.gh_token = ''
         self.lock = Lock()
         self.gh_api_repo: Repository = None
+        TelegramBot._db = Database('src/user_data.db')
+        TelegramBot._db.setup_db()
+
+    @staticmethod
+    def get_db():
+        return TelegramBot._db
 
     @staticmethod
     def get_instance():
@@ -49,6 +58,12 @@ class TelegramBot(Thread):
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         self.chat_id = update.effective_chat.id
         self.add_data_to_file(str(self.chat_id), 0)
+        db: Database = TelegramBot._db
+        conn = db.connect()
+        cursor = conn.cursor()
+        cursor.execute(f'INSERT INTO user_data (chat_id) VALUES (?)', (self.chat_id, ))
+        conn.commit()
+        conn.close()
         await update.message.reply_text('Hello! Thanks for chatting with me!')
 
     async def help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -66,22 +81,40 @@ class TelegramBot(Thread):
         help += '/linktogithub - returns a link to the README.md file of the bot\n'
         await update.message.reply_text(help)
 
+    def update_row_with_id(self, value, column_name):
+        # TelegramBot._db.insert(self.chat_id, self.repo, self.gh_token, self.username)
+        db: Database = TelegramBot._db
+        conn = db.connect()
+        cursor = conn.cursor()
+        cursor.execute(f'UPDATE user_data SET {column_name} = ? WHERE chat_id = ?', (value, self.chat_id))
+        conn.commit()
+        conn.close()
+
     async def link_github_token_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         account_token = ' '.join(context.args)
         self.gh_token = account_token
         self.add_data_to_file(account_token, 2)
+        complete = self.data_incomplete()
+        if complete:
+            self.update_row_with_id(self.gh_token, 'token')
         await update.message.reply_text('GitHub account token updated')
 
     async def link_github_repo_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         repo = ' '.join(context.args)
         self.repo = repo
         self.add_data_to_file(repo, 1)
+        complete = self.data_incomplete()
+        if complete:
+            self.update_row_with_id(self.repo, 'repo')
         await update.message.reply_text('Repository updated')
 
     async def link_github_username_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         username = ' '.join(context.args)
         self.username = username
         self.add_data_to_file(username, 3)
+        complete = self.data_incomplete()
+        if complete:
+            self.update_row_with_id(self.username, 'username')
         await update.message.reply_text('Name updated')
 
     def add_data_to_file(self, data: str, pos: int):
@@ -93,28 +126,31 @@ class TelegramBot(Thread):
         with open('src/user_data.txt', 'w') as file:
             file.writelines(lines)
 
-    async def data_incomplete(self, update: Update) -> bool:
+    def data_incomplete(self) -> bool:
         """
         Whenever this is called, it also updates the GitHub repository API
-        :param update:
         :return:
         """
         if self.gh_token == '' or self.username == '' or self.repo == '' or self.chat_id == '':
-            await update.message.reply_text(
-                f'The data you have provided is incomplete.\nGitHub repo - {self.repo}\nGitHub token - {self.gh_token}'
-                f'\nGitHub username - {self.username}\nChat ID - {self.chat_id}\n'
-                f'If somehow the Chat ID was not saved, you won\'t receive notifications. Run the /start command again.'
-                f'\nWebhooks were NOT set.')
             return False
         if self.gh_api_repo is None:
             self.gh_api_repo = Github(self.gh_token).get_user(self.username).get_repo(self.repo)
 
         return True
 
+    async def incomplete_reply(self, update: Update):
+        await update.message.reply_text(
+            f'The data you have provided is incomplete.\nGitHub repo - {self.repo}\nGitHub token - {self.gh_token}'
+            f'\nGitHub username - {self.username}\nChat ID - {self.chat_id}\n'
+            f'If somehow the Chat ID was not saved, you won\'t receive notifications. Run the /start command again.'
+            f'\nWebhooks were NOT set.')
+
     async def create_issue(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+
         with self.lock:
-            complete = await self.data_incomplete(update)
+            complete = self.data_incomplete()
             if not complete:
+                await self.incomplete_reply(update)
                 return
             if len(context.args) < 2:
                 await update.message.reply_text('Please provide a title and body for the issue.')
@@ -129,8 +165,9 @@ class TelegramBot(Thread):
 
     async def create_branch(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         with self.lock:
-            complete = await self.data_incomplete(update)
+            complete = self.data_incomplete()
             if not complete:
+                await self.incomplete_reply(update)
                 return
 
             name = context.args[0]
@@ -152,8 +189,9 @@ class TelegramBot(Thread):
 
     async def list_branches(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         with self.lock:
-            complete = await self.data_incomplete(update)
+            complete = self.data_incomplete()
             if not complete:
+                await self.incomplete_reply(update)
                 return
             branches = self.gh_api_repo.get_branches()
             branch_names = [branch.name for branch in branches]
@@ -161,8 +199,9 @@ class TelegramBot(Thread):
 
     async def delete_branch(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         with self.lock:
-            complete = await self.data_incomplete(update)
+            complete = self.data_incomplete()
             if not complete:
+                await self.incomplete_reply(update)
                 return
             if len(context.args) != 1:
                 await update.message.reply_text('Please provide the name of the branch to be deleted.')
@@ -176,13 +215,15 @@ class TelegramBot(Thread):
             ref.delete()
 
     async def set_webhooks(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        complete = await self.data_incomplete(update)
+        complete = self.data_incomplete()
         if not complete:
+            await self.incomplete_reply(update)
             return
 
         if len(context.args) == 0:
             await update.message.reply_text('The command cannot be used without a given port.')
             return
+
         port = context.args[0]
 
         events = ["create", "delete", "issues", "issue_comment", "commit_comment", "milestone", "label", "push",
@@ -197,19 +238,19 @@ class TelegramBot(Thread):
             "url": result,
             "content_type": "json"
         }
-        self.push_hooks(self.gh_api_repo, config, result + "/branch/create", ["create"])
-        self.push_hooks(self.gh_api_repo, config, result + "/branch/delete", ["delete"])
-        self.push_hooks(self.gh_api_repo, config, result + "/issues", ["issues"])
-        self.push_hooks(self.gh_api_repo, config, result + "/issue/comment", ["issue_comment"])
-        self.push_hooks(self.gh_api_repo, config, result + "/commit/comment", ["commit_comment"])
-        self.push_hooks(self.gh_api_repo, config, result + "/milestone", ["milestone"])
-        self.push_hooks(self.gh_api_repo, config, result + "/label", ["label"])
-        self.push_hooks(self.gh_api_repo, config, result + "/push", ["push"])
-        self.push_hooks(self.gh_api_repo, config, result + "/pull_request", ["pull_request"])
-        self.push_hooks(self.gh_api_repo, config, result + "/pull_request/review", ["pull_request_review"])
-        self.push_hooks(self.gh_api_repo, config, result + "/pull_request/review/comment",
+        self.push_hooks(self.gh_api_repo, config, result + f"/branch/create?repo={self.repo}", ["create"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/branch/delete?repo={self.repo}", ["delete"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/issues?repo={self.repo}", ["issues"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/issue/comment?repo={self.repo}", ["issue_comment"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/commit/comment?repo={self.repo}", ["commit_comment"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/milestone?repo={self.repo}", ["milestone"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/label?repo={self.repo}", ["label"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/push?repo={self.repo}", ["push"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/pull_request?repo={self.repo}", ["pull_request"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/pull_request/review?repo={self.repo}", ["pull_request_review"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/pull_request/review/comment?repo={self.repo}",
                         ["pull_request_review_comment"])
-        self.push_hooks(self.gh_api_repo, config, result + "/team_add", ["team_add"])
+        self.push_hooks(self.gh_api_repo, config, result + f"/team_add?repo={self.repo}", ["team_add"])
         await update.message.reply_text('Webhooks set! To see a list of notifications you might receive, '
                                         'visit https://github.com/mateimone/telegram_bot_python/blob/main/README.md. '
                                         'Make sure that the port is correct, otherwise run the method again with the '
@@ -236,6 +277,7 @@ class TelegramBot(Thread):
             await self.app.bot.send_message(chat_id=self.chat_id, text=message)
 
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        print(update.message.text)
         await update.message.reply_text('Please use one of the commands. Type "/" to see all existing commands.')
 
     async def error(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
