@@ -33,3 +33,15 @@ class Database:
         rows = cursor.fetchall()
 
         return rows
+
+    async def fetch_resource_with_id(self, chat_id, column=None):
+        conn = self.connect()
+        cursor = conn.cursor()
+        if column is None:
+            cursor.execute('SELECT * FROM user_data WHERE chat_id = ?', (chat_id, ))
+        else:
+            cursor.execute(f'SELECT {column} FROM user_data WHERE chat_id = ?', (chat_id, ))
+        row = cursor.fetchone()
+        conn.close()
+
+        return row

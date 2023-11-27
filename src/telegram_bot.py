@@ -1,6 +1,4 @@
 import asyncio
-import os
-import sqlite3
 from typing import Final, List
 
 from telegram import Update
@@ -18,23 +16,13 @@ class TelegramBot(Thread):
     _instance = None
     _event_loop = None
     _lock = Lock()
-    _db = None
 
     def __init__(self):
         super().__init__()
-        # self.repo: str | None = ''
-        # self.username: str | None = ''
         self.app: Application = Application.builder().token(TelegramBot.TOKEN).build()
-        # self.chat_id: str = ''
-        # self.gh_token = ''
         self.lock = Lock()
-        # self.gh_api_repo: Repository = None
-        TelegramBot._db = Database('src/user_data.db')
-        TelegramBot._db.setup_db()
-
-    @staticmethod
-    def get_db():
-        return TelegramBot._db
+        self.db = Database('src/user_data.db')
+        self.db.setup_db()
 
     @staticmethod
     def get_instance():
@@ -54,18 +42,14 @@ class TelegramBot(Thread):
         except Exception as e:
             print(f"Exception in TelegramBot: {e}")
 
-    # Commands
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        # self.chat_id = update.effective_chat.id
         chat_id = update.effective_chat.id
-        # self.add_data_to_file(str(chat_id), 0)
-        db: Database = TelegramBot._db
+        db: Database = self.db
         conn = db.connect()
         cursor = conn.cursor()
         cursor.execute(f'INSERT OR IGNORE INTO user_data (chat_id) VALUES (?)', (chat_id, ))
         conn.commit()
         conn.close()
-        # self.chat_id = chat_id
         await update.message.reply_text('Hello! Thanks for chatting with me!')
 
     async def help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -84,12 +68,11 @@ class TelegramBot(Thread):
         await update.message.reply_text(help)
 
     async def update_row_with_id(self, value, column_name, chat_id, update: Update):
-        # TelegramBot._db.insert(self.chat_id, self.repo, self.gh_token, self.username)
-        data = await self.fetch_resource_with_id(chat_id, update)
+        data = await self.db.fetch_resource_with_id(chat_id)
         if data is None:
             await self.incomplete_reply(update, data)
             return False
-        db: Database = TelegramBot._db
+        db: Database = self.db
         conn = db.connect()
         cursor = conn.cursor()
         cursor.execute(f'UPDATE user_data SET {column_name} = ? WHERE chat_id = ?', (value, chat_id))
@@ -98,26 +81,10 @@ class TelegramBot(Thread):
 
         return True
 
-    async def fetch_resource_with_id(self, chat_id, update: Update, column=None):
-        db: Database = TelegramBot._db
-        conn = db.connect()
-        cursor = conn.cursor()
-        if column is None:
-            cursor.execute('SELECT * FROM user_data WHERE chat_id = ?', (chat_id, ))
-        else:
-            cursor.execute(f'SELECT {column} FROM user_data WHERE chat_id = ?', (chat_id, ))
-        row = cursor.fetchone()
-        conn.close()
-
-        return row
-
     async def link_github_token_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
         gh_token = ' '.join(context.args)
-        # self.gh_token = account_token
-        # self.add_data_to_file(gh_token, 2)
-        # complete = self.data_incomplete()
-        # if complete:
+
         exists = await self.update_row_with_id(gh_token, 'token', chat_id, update)
         if exists:
             await update.message.reply_text('GitHub account token updated')
@@ -125,10 +92,7 @@ class TelegramBot(Thread):
     async def link_github_repo_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
         repo = ' '.join(context.args)
-        # self.repo = repo
-        # self.add_data_to_file(repo, 1)
-        # complete = self.data_incomplete()
-        # if complete:
+
         exists = await self.update_row_with_id(repo, 'repo', chat_id, update)
         if exists:
             await update.message.reply_text('Repository updated')
@@ -136,34 +100,10 @@ class TelegramBot(Thread):
     async def link_github_username_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
         username = ' '.join(context.args)
-        # self.username = username
-        # self.add_data_to_file(username, 3)
-        # complete = self.data_incomplete()
-        # if complete:
+
         exists = await self.update_row_with_id(username, 'username', chat_id, update)
         if exists:
             await update.message.reply_text('Name updated')
-
-    # def add_data_to_file(self, data: str, pos: int):
-    #     lines = []
-    #     with open('src/user_data.txt', 'r') as file:
-    #         lines = file.readlines()
-    #         lines[pos] = data + '\n'
-    #
-    #     with open('src/user_data.txt', 'w') as file:
-    #         file.writelines(lines)
-
-    # def data_incomplete(self, chat_id) -> bool:
-    #     """
-    #     Whenever this is called, it also updates the GitHub repository API
-    #     :return:
-    #     """
-    #     if self.gh_token == '' or self.username == '' or self.repo == '' or self.chat_id == '':
-    #         return False
-    #     if self.gh_api_repo is None:
-    #         self.gh_api_repo = Github(self.gh_token).get_user(self.username).get_repo(self.repo)
-
-        # return True
 
     async def create_issue(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         with self.lock:
@@ -231,19 +171,19 @@ class TelegramBot(Thread):
             if incomplete:
                 return
 
-            if len(context.args) != 1:
-                await update.message.reply_text('Please provide the name of the branch to be deleted.')
+            if len(context.args) < 1:
+                await update.message.reply_text('Please provide at least one name of a branch to be deleted.')
                 return
 
             github_api_repo = await self.get_api_repo(data)
 
-            branch_name = context.args[0]
-            branch_exists = any(branch.name == branch_name for branch in github_api_repo.get_branches())
-            if not branch_exists:
-                await update.message.reply_text('Provided branch does not exist!')
-                return
-            ref = github_api_repo.get_git_ref(f"heads/{branch_name}")
-            ref.delete()
+            for branch_name in context.args:
+                branch_exists = any(branch.name == branch_name for branch in github_api_repo.get_branches())
+                if not branch_exists:
+                    await update.message.reply_text(f'Branch {branch_name} does not exist!')
+                    continue
+                ref = github_api_repo.get_git_ref(f"heads/{branch_name}")
+                ref.delete()
 
     async def set_webhooks(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         with self.lock:
@@ -311,7 +251,7 @@ class TelegramBot(Thread):
     async def incomplete_reply(self, update: Update, data):
         if data is None:
             chat_id = update.effective_chat.id
-            db = TelegramBot._db
+            db = self.db
             conn = db.connect()
             cursor = conn.cursor()
             cursor.execute(f'INSERT OR IGNORE INTO user_data (chat_id) VALUES (?)', (chat_id,))
@@ -325,7 +265,7 @@ class TelegramBot(Thread):
                 f'The data you have provided is incomplete.\nGitHub repo - {data[1]}\nGitHub token - {data[2]}'
                 f'\nGitHub username - {data[3]}\nChat ID - {data[0]}\n'
                 f'\nRemember to run the /autosetwebhooks command after setting these parameters if your project '
-                f'doesn\'t have them already.')
+                f'doesn\'t have webhooks already.')
 
     async def get_api_repo(self, data):
         repo, token, username = data[1], data[2], data[3]
@@ -334,7 +274,7 @@ class TelegramBot(Thread):
 
     async def get_user_data(self, update):
         chat_id = update.effective_chat.id
-        data = await self.fetch_resource_with_id(chat_id, update)
+        data = await self.db.fetch_resource_with_id(chat_id)
         return data
 
     async def link_to_github(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -374,19 +314,6 @@ class TelegramBot(Thread):
 
         # Error
         self.app.add_error_handler(self.error)
-
-        # if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_data.txt')):
-        #     with open('src/user_data.txt', 'r') as file:
-        #         tokens = file.read().split('\n')
-        #         # self.chat_id = tokens[0]
-        #         # self.repo = tokens[1]
-        #         # self.gh_token = tokens[2]
-        #         # self.username = tokens[3]
-        #         file.close()
-        # else:
-        #     with open('src/user_data.txt', 'w') as file:
-        #         file.write('\n\n\n\n')
-        #         file.close()
 
         TelegramBot._instance = self
 

@@ -63,7 +63,7 @@ class Server(Thread):
         sender = data['sender']['login']
         branch_name = data['ref']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
@@ -83,7 +83,7 @@ class Server(Thread):
         sender = data['sender']['login']
         branch_name = data['ref']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
@@ -95,6 +95,7 @@ class Server(Thread):
     @staticmethod
     @app.route('/<repo>/issues', methods=['POST'])
     async def issue(repo):
+        print('here')
         bot: TelegramBot = TelegramBot.get_instance()
         js = json.dumps(request.json)
         Server.write_to_file('issue_updates.txt', js)
@@ -105,7 +106,7 @@ class Server(Thread):
         title = data['issue']['title']
         number = data['issue']['number']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
@@ -126,7 +127,7 @@ class Server(Thread):
         comment = data['comment']['body']
         issue_title = data['issue']['title']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
@@ -146,7 +147,7 @@ class Server(Thread):
         commenter = data['comment']['user']['login']
         comment = data['comment']['body']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
@@ -167,7 +168,7 @@ class Server(Thread):
         milestone_title = data['milestone']['title']
         creator = data['milestone']['creator']['login']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
@@ -188,7 +189,7 @@ class Server(Thread):
         pr_title = data['pull_request']['title']
         sender = data['sender']['login']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
@@ -209,7 +210,7 @@ class Server(Thread):
         label_name = data['label']['name']
         repo_name = data['repository']['name']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
@@ -230,7 +231,7 @@ class Server(Thread):
         ref = data['ref']
         branch = str(ref).split('/')[2]
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(bot.send_update(f'Push event by {pusher} on {branch} ({ref})', chat_id),
@@ -250,7 +251,7 @@ class Server(Thread):
         review_state = data['review']['state']
         pr_title = data['pull_request']['title']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
@@ -271,7 +272,7 @@ class Server(Thread):
         comment_body = data['comment']['body']
         pr_title = data['pull_request']['title']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
@@ -291,7 +292,7 @@ class Server(Thread):
         team_name = data['team']['name']
         repo_name = data['repository']['name']
 
-        db: Database = TelegramBot.get_db()
+        db: Database = bot.db
         chat_id_list: list = Server.get_chats_by_repo(repo, db)
         for chat_id in chat_id_list:
             asyncio.run_coroutine_threadsafe(
