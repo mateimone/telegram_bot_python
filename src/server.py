@@ -10,12 +10,10 @@ app: Flask = Flask(__name__)
 
 class Server(Thread):
     event_loop = None
-    _debug = False
 
-    def __init__(self, _debug):
+    def __init__(self):
         super().__init__()
         self.lock = Lock()
-        Server._debug = _debug
 
     def run(self):
         """
@@ -33,7 +31,7 @@ class Server(Thread):
         """
         Starts the server, which receives POST requests from GitHub.
         """
-        app.run(debug=Server._debug, port=4040, use_reloader=False)
+        app.run(debug=False, port=4040, use_reloader=False)
 
     @staticmethod
     @app.route('/<repo>/branch/create', methods=['POST'])
