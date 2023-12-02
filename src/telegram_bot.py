@@ -179,9 +179,9 @@ class TelegramBot(Thread):
                 return
             if branch_exists:
                 sha = github_api_repo.get_branch(source_branch).commit.sha
-                gitref: Repository.GitRef = github_api_repo.create_git_ref(ref=f"refs/heads/{name}", sha=sha)
+                gitref: Repository.GitRef = github_api_repo.create_git_ref(ref=f'refs/heads/{name}', sha=sha)
             else:
-                await update.message.reply_text("Source branch not found!")
+                await update.message.reply_text('Source branch not found!')
 
     async def list_branches(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
@@ -224,7 +224,7 @@ class TelegramBot(Thread):
                 if not branch_exists:
                     await update.message.reply_text(f'Branch {branch_name} does not exist!')
                     continue
-                ref = github_api_repo.get_git_ref(f"heads/{branch_name}")
+                ref = github_api_repo.get_git_ref(f'heads/{branch_name}')
                 ref.delete()
 
     async def set_webhooks(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -247,8 +247,8 @@ class TelegramBot(Thread):
 
             port = context.args[0]
 
-            events = ["create", "delete", "issues", "issue_comment", "commit_comment", "milestone", "label", "push",
-                      "pull_request", "pull_request_review", "pull_request_review_comment", "team_add"]
+            events = ['create', 'delete', 'issues', 'issue_comment', 'commit_comment', 'milestone', 'label', 'push',
+                      'pull_request', 'pull_request_review', 'pull_request_review_comment', 'team_add']
 
             github_api_repo = await self.get_api_repo(data)
             repo = data[1]
@@ -260,22 +260,22 @@ class TelegramBot(Thread):
 
             result = await Ngrok.get_ngrok_url(port)
             config = {
-                "url": result,
-                "content_type": "json"
+                'url': result,
+                'content_type': 'json'
             }
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/branch/create", ["create"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/branch/delete", ["delete"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/issues", ["issues"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/issue/comment", ["issue_comment"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/commit/comment", ["commit_comment"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/milestone", ["milestone"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/label", ["label"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/push", ["push"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/pull_request", ["pull_request"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/pull_request/review", ["pull_request_review"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/pull_request/review/comment",
-                            ["pull_request_review_comment"])
-            self.push_hooks(github_api_repo, config, result + f"/{repo}/team_add", ["team_add"])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/branch/create', ['create'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/branch/delete', ['delete'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/issues', ['issues'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/issue/comment', ['issue_comment'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/commit/comment', ['commit_comment'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/milestone', ['milestone'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/label', ['label'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/push', ['push'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/pull_request', ['pull_request'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/pull_request/review', ['pull_request_review'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/pull_request/review/comment',
+                            ['pull_request_review_comment'])
+            self.push_hooks(github_api_repo, config, result + f'/{repo}/team_add', ['team_add'])
             await update.message.reply_text('Webhooks set! To see a list of notifications you might receive, '
                                             'visit https://github.com/mateimone/telegram_bot_python/blob/main/README.md. '
                                             'Make sure that the port is correct, otherwise run the method again with the '
@@ -289,8 +289,8 @@ class TelegramBot(Thread):
         :param path: webhook path
         :param events: webhook event
         """
-        config["url"] = path
-        print("PUSHED")
+        config['url'] = path
+        print('PUSHED')
         repository.create_hook(
             name='web',
             config=config,
@@ -360,7 +360,7 @@ class TelegramBot(Thread):
         :param update: user message
         :param context: the whole user message
         """
-        print(f"Update {update} caused error {context.error}")
+        print(f'Update {update} caused error {context.error}')
 
     async def get_api_repo(self, data):
         """
@@ -396,7 +396,7 @@ class TelegramBot(Thread):
         It also sets the instance of the bot to be accessed in the Server class.
         The bot polls every 0.2 seconds.
         """
-        print("Starting bot\n")
+        print('Starting bot\n')
 
         # Commands
         self.app.add_handler(CommandHandler('start', self.start_command))
@@ -419,5 +419,5 @@ class TelegramBot(Thread):
 
         TelegramBot.instance = self
 
-        print("Polling...")
+        print('Polling...')
         self.app.run_polling(poll_interval=0.2)

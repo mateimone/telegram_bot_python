@@ -1,5 +1,3 @@
-import argparse
-
 from telegram_bot import TelegramBot
 from server import Server
 

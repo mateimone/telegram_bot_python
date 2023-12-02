@@ -25,7 +25,7 @@ class Server(Thread):
             Server.event_loop = loop
             self.main_server()
         except Exception as e:
-            print(f"Exception in TelegramBot: {e}")
+            print(f'Exception in TelegramBot: {e}')
 
     def main_server(self):
         """
