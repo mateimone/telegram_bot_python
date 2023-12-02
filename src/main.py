@@ -1,5 +1,4 @@
 import argparse
-import sqlite3
 
 from telegram_bot import TelegramBot
 from server import Server
