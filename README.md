@@ -11,9 +11,6 @@ If you don't know how to do this, follow this [guide](https://www.educative.io/a
 
 Now, clone the project and install the dependencies. Then, open up a command line and run the command
 ```python /path/to/src/main.py```
-This command accepts one additional parameter, debug. Write 'True' if you want any notification to be saved to a file,
-as you can see more information there, although in JSON format as sent by GitHub. Writing anything else or leaving it
-empty will assign False to that parameter.
 **Note**: you have to include the python package 'src' in the path, otherwise the bot will not be able to correctly store your data
 
 After you've done this, open up another command line and run the command
