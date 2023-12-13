@@ -9,12 +9,10 @@ This bot is not designed to be used in a group chat, as it requires a sort of Gi
 Firstly, you will want to set Ngrok as a $PATH$ variable (download from [here](https://ngrok.com/download); for Windows, just download as ZIP and extract the files). 
 If you don't know how to do this, follow this [guide](https://www.educative.io/answers/how-to-add-an-application-path-to-system-environment-variables).
 
-Now, clone the project and install the dependencies. Then, open up a command line and run the command\
-```python /path/to/src/main.py```\
+Now, clone the project and install the dependencies. Then, open up a command line and run the command ```python /path/to/src/main.py```\
 **Note**: you have to include the python package 'src' in the path, otherwise the bot will not be able to correctly store your data.
 
-After you've done this, open up another command line and run the command\
-```ngrok http http://127.0.0.1:4040```
+After you've done this, open up another command line and run the command ```ngrok http http://127.0.0.1:4040```\
 It is essential that you first run the python script, and then the Ngrok command. Otherwise, the program might not work.
 
 Finally, let's put them all together. To receive notifications, you need to add webhooks to GitHub that connect
@@ -38,7 +36,8 @@ Run one last command, with ```param = web interface port```.
 After a few seconds, you should receive a message on Telegram stating that the webhooks are set. You will now get
 notifications for certain updates on GitHub. A list of notifications can be found at the end of the file.\
 **Note**: webhooks can only be set by a repository owner or by someone who has admin access.\
-If you aren't allowed to add webhooks, the repo, token, and username can still be used to create issues, branch, and other resources.
+If you aren't allowed to add webhooks, the repo, token, and username can still be used to create issues and branches, and to receive messages.
+Still, someone else will have to add the webhooks following these instructions.
 
 If you want to close the program, simply exit both Ngrok and python terminals. The bot will retain the information that
 you provided through the 3 'link commands'. The webhook command will have to be run again, since the address Ngrok
