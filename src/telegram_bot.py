@@ -290,7 +290,6 @@ class TelegramBot(Thread):
         :param events: webhook event
         """
         config['url'] = path
-        print('PUSHED')
         repository.create_hook(
             name='web',
             config=config,
