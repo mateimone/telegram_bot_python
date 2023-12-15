@@ -34,7 +34,9 @@ Run one last command, with ```param = web interface port```.
 /auto_set_webhooks param - automatically sets webhooks for updates on ngrok's web interface port
 ```
 After a few seconds, you should receive a message on Telegram stating that the webhooks are set. You will now get
-notifications for certain updates on GitHub. A list of notifications can be found at the end of the file.\
+notifications for certain updates on GitHub. A list of notifications can be found at the end of the file. Do not worry
+about the errors Ngrok is giving. They are because the post requests GitHub is making when setting webhooks are different
+from the ones that are usually sent, i.e. they have a different format - this causes errors, but they are harmless.\
 **Note**: webhooks can only be set by a repository owner or by someone who has admin access.\
 If you aren't allowed to add webhooks, the repo, token, and username can still be used to create issues and branches, and to receive messages.
 Still, someone else will have to add the webhooks following these instructions.
